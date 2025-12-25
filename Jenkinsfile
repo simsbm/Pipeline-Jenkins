@@ -30,15 +30,18 @@ pipeline {
                 sh "docker run --rm $IMAGE_NAME:$IMAGE_TAG npm test"
             }
         }
-        
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
-                    sh "docker push $IMAGE_NAME:$IMAGE_TAG"
-                }
+        // Remplacez votre stage Push par celui-ci pour plus de robustesse :
+stage('Push to Docker Hub') {
+    steps {
+        script {
+            withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                sh "echo $PASS | docker login -u $USER --password-stdin"
+                sh "docker push devcker18/jenkins-tp-app:1"
             }
         }
+    }
+}
+      
         
         stage('Deploy to Staging') {
             steps {

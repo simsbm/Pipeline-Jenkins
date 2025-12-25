@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
-        IMAGE_NAME = "votre-user-dockerhub/jenkins-tp-app"
+        IMAGE_NAME = "devcker18/jenkins-tp-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
     

@@ -1,73 +1,55 @@
 pipeline {
     agent any
-
+    
     environment {
-        // Remplacez par votre nom d'utilisateur Docker Hub
-        DOCKER_IMAGE = 'devcker18/tp4-app'
-        registryCredential = 'docker-hub-credentials'
+        DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
+        IMAGE_NAME = "votre-user-dockerhub/jenkins-tp-app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
-
+    
     stages {
-        stage('Clone') {
+        stage('Clone Repository') {
             steps {
-                // Le clone est automatique si configuré dans le Job, 
-                // mais on peut le forcer ici si besoin.
+                // Le clone est automatique avec un pipeline SCM, 
+                // mais on peut le forcer ou l'afficher
                 checkout scm
             }
         }
-
-        stage('Build Docker Image') {
+        
+        stage('Build Image') {
             steps {
                 script {
-                    dockerImage = docker.build(DOCKER_IMAGE + ":$BUILD_NUMBER")
+                    sh "docker build -t $IMAGE_NAME:$IMAGE_TAG ."
                 }
             }
         }
-
+        
         stage('Test App') {
             steps {
-                // On lance un test simple dans le conteneur
-                sh 'npm test' 
+                // Lancer un conteneur temporaire pour tester
+                sh "docker run --rm $IMAGE_NAME:$IMAGE_TAG npm test"
             }
         }
-
+        
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('', registryCredential) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
+                    sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
+                    sh "docker push $IMAGE_NAME:$IMAGE_TAG"
                 }
             }
         }
-
+        
         stage('Deploy to Staging') {
             steps {
-                sh '''
-                # Arrêter l'ancien conteneur s'il existe
-                docker stop tp4-staging || true
-                docker rm tp4-staging || true
-                
-                # Lancer le nouveau conteneur
-                docker run -d -p 3000:3000 --name tp4-staging ${DOCKER_IMAGE}:${BUILD_NUMBER}
-                '''
+                script {
+                    // Nettoyage de l'ancien conteneur s'il existe
+                    sh "docker stop staging-app || true"
+                    sh "docker rm staging-app || true"
+                    // Déploiement du nouveau
+                    sh "docker run -d -p 3005:3000 --name staging-app $IMAGE_NAME:$IMAGE_TAG"
+                }
             }
-        }
-    }
-    
-    // Étape 11 : Notifications
-    post {
-        always {
-            echo 'Pipeline terminé.'
-        }
-        success {
-            echo 'Succès ! Application déployée.'
-            // Exemple email (nécessite configuration SMTP) :
-            // mail to: 'admin@example.com', subject: 'Succès Pipeline', body: "Le build ${BUILD_NUMBER} a réussi."
-        }
-        failure {
-            echo 'Échec du pipeline.'
         }
     }
 }

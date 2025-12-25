@@ -3,7 +3,7 @@ const app = express();
 const port = 3000;
 
 app.get('/', (req, res) => {
-  res.send('Hello Group 4! Votre pipeline est maintenant operationnel');
+  res.send('Hello Group 4! Votre pipeline est maintenant ok ');
 });
 
 app.listen(port, () => {

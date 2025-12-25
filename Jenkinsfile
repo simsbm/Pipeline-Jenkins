@@ -42,4 +42,19 @@ pipeline {
             }
         }
     }
+    // Fin du bloc stages
+
+    post {
+        success {
+            mail to: 'morelbrel@gmail.com',
+                 subject: "Succès du Pipeline Jenkins : Build #${env.BUILD_NUMBER}",
+                 body: "Félicitations Morel ! Le build ${env.BUILD_NUMBER} de l'application ${env.JOB_NAME} a réussi et est déployé sur le port 3005."
+        }
+        failure {
+            mail to: 'morelbrel@gmail.com',
+                 subject: "Échec du Pipeline Jenkins : Build #${env.BUILD_NUMBER}",
+                 body: "Attention, le build ${env.BUILD_NUMBER} a échoué. Veuillez vérifier les logs sur : ${env.BUILD_URL}"
+        }
+    }
+ // Fin du pipeline
 }
